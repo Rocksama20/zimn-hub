@@ -1,27 +1,26 @@
--- ZimnHub - Roblox Script
+-- ZimnHub v1.1 - Blox Fruits Compatible
 -- Nhấn K để bật/tắt
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Tạo ScreenGui
+-- Xóa Hub cũ nếu có
+if playerGui:FindFirstChild("ZimnHub") then
+    playerGui:FindFirstChild("ZimnHub"):Destroy()
+end
+
+-- Tạo ScreenGui (dùng PlayerGui thay vì CoreGui cho compatibility tốt hơn)
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "ZimnHub"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
--- Kiểm tra xem có chạy trên Executor không
-local success = pcall(function()
-    screenGui.Parent = CoreGui
-end)
-if not success then
-    screenGui.Parent = playerGui
-end
+screenGui.IgnoreGuiInset = true
+screenGui.Parent = playerGui
 
 -- Biến trạng thái
 local isOpen = false
@@ -30,41 +29,44 @@ local currentTab = "home"
 -- Tạo Main Frame
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 600, 0, 400)
-mainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
-mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+mainFrame.Size = UDim2.new(0, 550, 0, 380)
+mainFrame.Position = UDim2.new(0.5, -275, 0.5, -190)
+mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
 mainFrame.BorderSizePixel = 0
 mainFrame.Visible = false
+mainFrame.Active = true
 mainFrame.Parent = screenGui
 
 -- Bo góc cho Main Frame
 local mainCorner = Instance.new("UICorner")
-mainCorner.CornerRadius = UDim.new(0, 12)
+mainCorner.CornerRadius = UDim.new(0, 10)
 mainCorner.Parent = mainFrame
 
--- Shadow effect
-local shadow = Instance.new("ImageLabel")
-shadow.Name = "Shadow"
-shadow.Size = UDim2.new(1, 30, 1, 30)
-shadow.Position = UDim2.new(0, -15, 0, -15)
-shadow.BackgroundTransparency = 1
-shadow.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
-shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-shadow.ImageTransparency = 0.7
-shadow.ZIndex = 0
-shadow.Parent = mainFrame
+-- Stroke để nổi bật
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = Color3.fromRGB(138, 43, 226)
+mainStroke.Thickness = 2
+mainStroke.Parent = mainFrame
 
 -- Header
 local header = Instance.new("Frame")
 header.Name = "Header"
-header.Size = UDim2.new(1, 0, 0, 50)
+header.Size = UDim2.new(1, 0, 0, 45)
 header.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
 header.BorderSizePixel = 0
 header.Parent = mainFrame
 
 local headerCorner = Instance.new("UICorner")
-headerCorner.CornerRadius = UDim.new(0, 12)
+headerCorner.CornerRadius = UDim.new(0, 10)
 headerCorner.Parent = header
+
+-- Fix header corners
+local headerFix = Instance.new("Frame")
+headerFix.Size = UDim2.new(1, 0, 0, 10)
+headerFix.Position = UDim2.new(0, 0, 1, -10)
+headerFix.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+headerFix.BorderSizePixel = 0
+headerFix.Parent = header
 
 -- Header Title
 local title = Instance.new("TextLabel")
@@ -74,50 +76,81 @@ title.Position = UDim2.new(0, 15, 0, 0)
 title.BackgroundTransparency = 1
 title.Text = "⚡ ZimnHub"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.TextSize = 24
+title.TextSize = 22
 title.Font = Enum.Font.GothamBold
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = header
 
+-- Version label
+local version = Instance.new("TextLabel")
+version.Size = UDim2.new(0, 100, 0, 20)
+version.Position = UDim2.new(0, 15, 1, -23)
+version.BackgroundTransparency = 1
+version.Text = "v1.1 - Blox Fruits"
+version.TextColor3 = Color3.fromRGB(200, 200, 255)
+version.TextSize = 10
+version.Font = Enum.Font.Gotham
+version.TextXAlignment = Enum.TextXAlignment.Left
+version.Parent = header
+
+-- Minimize Button
+local minimizeBtn = Instance.new("TextButton")
+minimizeBtn.Name = "MinimizeButton"
+minimizeBtn.Size = UDim2.new(0, 35, 0, 35)
+minimizeBtn.Position = UDim2.new(1, -80, 0, 5)
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(255, 193, 7)
+minimizeBtn.BorderSizePixel = 0
+minimizeBtn.Text = "_"
+minimizeBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+minimizeBtn.TextSize = 20
+minimizeBtn.Font = Enum.Font.GothamBold
+minimizeBtn.Parent = header
+
+local minimizeBtnCorner = Instance.new("UICorner")
+minimizeBtnCorner.CornerRadius = UDim.new(0, 6)
+minimizeBtnCorner.Parent = minimizeBtn
+
 -- Close Button
 local closeBtn = Instance.new("TextButton")
 closeBtn.Name = "CloseButton"
-closeBtn.Size = UDim2.new(0, 40, 0, 40)
-closeBtn.Position = UDim2.new(1, -45, 0, 5)
+closeBtn.Size = UDim2.new(0, 35, 0, 35)
+closeBtn.Position = UDim2.new(1, -40, 0, 5)
 closeBtn.BackgroundColor3 = Color3.fromRGB(220, 53, 69)
 closeBtn.BorderSizePixel = 0
 closeBtn.Text = "X"
 closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeBtn.TextSize = 20
+closeBtn.TextSize = 18
 closeBtn.Font = Enum.Font.GothamBold
 closeBtn.Parent = header
 
 local closeBtnCorner = Instance.new("UICorner")
-closeBtnCorner.CornerRadius = UDim.new(0, 8)
+closeBtnCorner.CornerRadius = UDim.new(0, 6)
 closeBtnCorner.Parent = closeBtn
 
 -- Tab Container
 local tabContainer = Instance.new("Frame")
 tabContainer.Name = "TabContainer"
-tabContainer.Size = UDim2.new(1, 0, 0, 40)
-tabContainer.Position = UDim2.new(0, 0, 0, 50)
-tabContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+tabContainer.Size = UDim2.new(1, 0, 0, 38)
+tabContainer.Position = UDim2.new(0, 0, 0, 45)
+tabContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 tabContainer.BorderSizePixel = 0
 tabContainer.Parent = mainFrame
 
 local tabLayout = Instance.new("UIListLayout")
 tabLayout.FillDirection = Enum.FillDirection.Horizontal
 tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
-tabLayout.Padding = UDim.new(0, 2)
+tabLayout.Padding = UDim.new(0, 1)
 tabLayout.Parent = tabContainer
 
 -- Content Area
-local contentFrame = Instance.new("Frame")
+local contentFrame = Instance.new("ScrollingFrame")
 contentFrame.Name = "ContentFrame"
-contentFrame.Size = UDim2.new(1, -20, 1, -110)
-contentFrame.Position = UDim2.new(0, 10, 0, 100)
-contentFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+contentFrame.Size = UDim2.new(1, -20, 1, -100)
+contentFrame.Position = UDim2.new(0, 10, 0, 93)
+contentFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 contentFrame.BorderSizePixel = 0
+contentFrame.ScrollBarThickness = 4
+contentFrame.CanvasSize = UDim2.new(0, 0, 2, 0)
 contentFrame.Parent = mainFrame
 
 local contentCorner = Instance.new("UICorner")
@@ -127,12 +160,12 @@ contentCorner.Parent = contentFrame
 -- Content Text
 local contentText = Instance.new("TextLabel")
 contentText.Name = "ContentText"
-contentText.Size = UDim2.new(1, -20, 1, -20)
+contentText.Size = UDim2.new(1, -20, 0, 500)
 contentText.Position = UDim2.new(0, 10, 0, 10)
 contentText.BackgroundTransparency = 1
-contentText.Text = "📱 Chào mừng đến với ZimnHub!\n\nChọn một tab để bắt đầu"
-contentText.TextColor3 = Color3.fromRGB(200, 200, 200)
-contentText.TextSize = 18
+contentText.Text = "📱 Chào mừng đến với ZimnHub!\n\nĐược tối ưu cho Blox Fruits\nChọn một tab để bắt đầu"
+contentText.TextColor3 = Color3.fromRGB(200, 200, 220)
+contentText.TextSize = 16
 contentText.Font = Enum.Font.Gotham
 contentText.TextWrapped = true
 contentText.TextYAlignment = Enum.TextYAlignment.Top
@@ -140,23 +173,24 @@ contentText.Parent = contentFrame
 
 -- Tabs Data
 local tabs = {
-    {name = "home", label = "🏠 Trang chủ", content = "📱 Chào mừng đến với ZimnHub!\n\nĐây là trang chủ của bạn."},
-    {name = "player", label = "👤 Người chơi", content = "👤 Thông tin người chơi\n\nTên: " .. player.Name .. "\nUserID: " .. player.UserId},
-    {name = "game", label = "🎮 Trò chơi", content = "🎮 Chức năng trò chơi\n\nThêm các script game của bạn ở đây!"},
-    {name = "settings", label = "⚙️ Cài đặt", content = "⚙️ Cài đặt Hub\n\nTùy chỉnh Hub theo ý bạn."},
-    {name = "info", label = "ℹ️ Thông tin", content = "ℹ️ ZimnHub v1.0\n\nTạo bởi: Zimn\nNhấn K để bật/tắt"}
+    {name = "home", label = "🏠 Home", content = "📱 ZimnHub for Blox Fruits\n\nVersion: 1.1\nGame: Blox Fruits\n\nChọn tab để xem chức năng!"},
+    {name = "player", label = "👤 Player", content = "👤 Player Info\n\nName: " .. player.Name .. "\nDisplay: " .. player.DisplayName .. "\nUserID: " .. player.UserId .. "\n\nLevel: Loading...\nBeli: Loading..."},
+    {name = "combat", label = "⚔️ Combat", content = "⚔️ Combat Features\n\n• Auto Farm\n• Auto Quest\n• Auto Boss\n• Fast Attack\n• Bring Mob\n\n[Chức năng sẽ được thêm]"},
+    {name = "stats", label = "📊 Stats", content = "📊 Stats Manager\n\n• Auto Stats\n• Reset Stats\n• Point Manager\n\n[Chức năng sẽ được thêm]"},
+    {name = "misc", label = "🔧 Misc", content = "🔧 Miscellaneous\n\n• ESP\n• Teleport\n• Anti-AFK\n• Boost FPS\n\n[Chức năng sẽ được thêm]"},
+    {name = "settings", label = "⚙️ Settings", content = "⚙️ Hub Settings\n\n• Theme Color\n• Keybind: K\n• Auto Save\n• Discord: Soon\n\nMade by Zimn"}
 }
 
 -- Tạo Tab Buttons
 local function createTabButton(tabData, index)
     local tabBtn = Instance.new("TextButton")
     tabBtn.Name = tabData.name .. "Tab"
-    tabBtn.Size = UDim2.new(0, 115, 1, 0)
-    tabBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    tabBtn.Size = UDim2.new(0, 90, 1, 0)
+    tabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
     tabBtn.BorderSizePixel = 0
     tabBtn.Text = tabData.label
-    tabBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
-    tabBtn.TextSize = 14
+    tabBtn.TextColor3 = Color3.fromRGB(160, 160, 180)
+    tabBtn.TextSize = 13
     tabBtn.Font = Enum.Font.GothamSemibold
     tabBtn.LayoutOrder = index
     tabBtn.Parent = tabContainer
@@ -168,8 +202,8 @@ local function createTabButton(tabData, index)
         -- Update all tab colors
         for _, child in pairs(tabContainer:GetChildren()) do
             if child:IsA("TextButton") then
-                child.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-                child.TextColor3 = Color3.fromRGB(180, 180, 180)
+                child.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+                child.TextColor3 = Color3.fromRGB(160, 160, 180)
             end
         end
         
@@ -190,47 +224,66 @@ end
 
 -- Dragging functionality
 local dragging = false
-local dragStart = nil
-local startPos = nil
+local dragInput, dragStart, startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    mainFrame.Position = UDim2.new(
+        startPos.X.Scale,
+        startPos.X.Offset + delta.X,
+        startPos.Y.Scale,
+        startPos.Y.Offset + delta.Y
+    )
+end
 
 header.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         dragStart = input.Position
         startPos = mainFrame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
     end
 end)
 
-header.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
+header.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
     end
 end)
 
 UserInputService.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - dragStart
-        mainFrame.Position = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y
-        )
+    if input == dragInput and dragging then
+        update(input)
     end
 end)
 
--- Toggle function
+-- Toggle function với animation
 local function toggleHub()
     isOpen = not isOpen
-    mainFrame.Visible = isOpen
     
     if isOpen then
+        mainFrame.Visible = true
         mainFrame.Size = UDim2.new(0, 0, 0, 0)
         local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-        local tween = TweenService:Create(mainFrame, tweenInfo, {Size = UDim2.new(0, 600, 0, 400)})
+        local tween = TweenService:Create(mainFrame, tweenInfo, {Size = UDim2.new(0, 550, 0, 380)})
         tween:Play()
+    else
+        local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+        local tween = TweenService:Create(mainFrame, tweenInfo, {Size = UDim2.new(0, 0, 0, 0)})
+        tween:Play()
+        tween.Completed:Connect(function()
+            mainFrame.Visible = false
+        end)
     end
 end
+
+-- Minimize button
+minimizeBtn.MouseButton1Click:Connect(toggleHub)
 
 -- Close button
 closeBtn.MouseButton1Click:Connect(toggleHub)
@@ -242,11 +295,11 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
--- Notification
-local function showNotification(text)
+-- Notification system
+local function createNotification(text, duration)
     local notif = Instance.new("Frame")
-    notif.Size = UDim2.new(0, 300, 0, 60)
-    notif.Position = UDim2.new(1, -310, 1, -70)
+    notif.Size = UDim2.new(0, 280, 0, 60)
+    notif.Position = UDim2.new(1, 10, 1, -70)
     notif.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
     notif.BorderSizePixel = 0
     notif.Parent = screenGui
@@ -255,22 +308,47 @@ local function showNotification(text)
     notifCorner.CornerRadius = UDim.new(0, 8)
     notifCorner.Parent = notif
     
+    local notifStroke = Instance.new("UIStroke")
+    notifStroke.Color = Color3.fromRGB(180, 100, 255)
+    notifStroke.Thickness = 2
+    notifStroke.Parent = notif
+    
     local notifText = Instance.new("TextLabel")
     notifText.Size = UDim2.new(1, -20, 1, -20)
     notifText.Position = UDim2.new(0, 10, 0, 10)
     notifText.BackgroundTransparency = 1
     notifText.Text = text
     notifText.TextColor3 = Color3.fromRGB(255, 255, 255)
-    notifText.TextSize = 16
+    notifText.TextSize = 14
     notifText.Font = Enum.Font.GothamBold
     notifText.TextWrapped = true
     notifText.Parent = notif
     
-    wait(3)
-    notif:Destroy()
+    -- Slide in animation
+    local tweenIn = TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(1, -290, 1, -70)})
+    tweenIn:Play()
+    
+    -- Auto destroy
+    task.wait(duration or 3)
+    local tweenOut = TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Position = UDim2.new(1, 10, 1, -70)})
+    tweenOut:Play()
+    tweenOut.Completed:Connect(function()
+        notif:Destroy()
+    end)
 end
 
 -- Show welcome notification
-showNotification("⚡ ZimnHub đã tải!\nNhấn K để mở")
+task.wait(0.5)
+createNotification("⚡ ZimnHub loaded!\n🎮 Blox Fruits Ready\nPress K to toggle", 4)
 
-print("ZimnHub loaded successfully! Press K to toggle.")
+-- Success message
+print("=====================================")
+print("⚡ ZimnHub v1.1 - Loaded Successfully")
+print("🎮 Game: Blox Fruits")
+print("⌨️  Press K to open/close")
+print("👤 User: " .. player.Name)
+print("=====================================")
+
+-- Auto open hub lần đầu
+task.wait(1)
+toggleHub()
