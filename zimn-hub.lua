@@ -1,4 +1,5 @@
--- Zimn Hub for Jailbreak
+-- Zimn Hub for Jailbreak v1.0
+-- Created by ZimnLas
 -- Key: ZimnHub12
 
 local keyCorrect = "ZimnHub12"
@@ -31,8 +32,9 @@ local rootPart = character:WaitForChild("HumanoidRootPart")
 local autoRobbing = false
 local speedEnabled = false
 local jumpEnabled = false
+local currentTab = "AutoRob"
 
--- Stores/Locations cho Jailbreak
+-- Stores/Locations
 local stores = {
     ["Jewelry"] = {
         entrance = CFrame.new(142, 18, 1365),
@@ -102,9 +104,9 @@ local function createKeySystem()
     titleLabel.Size = UDim2.new(1, 0, 0, 60)
     titleLabel.BackgroundColor3 = Color3.fromRGB(255, 85, 0)
     titleLabel.BorderSizePixel = 0
-    titleLabel.Text = "🚔 ZIMN HUB - JAILBREAK"
+    titleLabel.Text = "🚔 ZIMN HUB"
     titleLabel.TextColor3 = Color3.white()
-    titleLabel.TextSize = 22
+    titleLabel.TextSize = 24
     titleLabel.Font = Enum.Font.GothamBold
     titleLabel.Parent = keyFrame
     
@@ -194,8 +196,8 @@ function loadMainMenu()
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     
     local mainFrame = Instance.new("Frame")
-    mainFrame.Size = UDim2.new(0, 420, 0, 550)
-    mainFrame.Position = UDim2.new(0.5, -210, 0.5, -275)
+    mainFrame.Size = UDim2.new(0, 500, 0, 400)
+    mainFrame.Position = UDim2.new(0.5, -250, 0.5, -200)
     mainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
     mainFrame.BorderSizePixel = 0
     mainFrame.Active = true
@@ -206,6 +208,7 @@ function loadMainMenu()
     corner.CornerRadius = UDim.new(0, 12)
     corner.Parent = mainFrame
     
+    -- Header
     local header = Instance.new("Frame")
     header.Size = UDim2.new(1, 0, 0, 50)
     header.BackgroundColor3 = Color3.fromRGB(255, 85, 0)
@@ -220,9 +223,9 @@ function loadMainMenu()
     title.Size = UDim2.new(1, -100, 1, 0)
     title.Position = UDim2.new(0, 10, 0, 0)
     title.BackgroundTransparency = 1
-    title.Text = "🚔 ZIMN HUB - JAILBREAK"
+    title.Text = "🚔 ZIMN HUB"
     title.TextColor3 = Color3.white()
-    title.TextSize = 20
+    title.TextSize = 22
     title.Font = Enum.Font.GothamBold
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.Parent = header
@@ -241,16 +244,90 @@ function loadMainMenu()
     closeBtnCorner.CornerRadius = UDim.new(0, 8)
     closeBtnCorner.Parent = closeBtn
     
-    local container = Instance.new("ScrollingFrame")
-    container.Size = UDim2.new(1, -20, 1, -70)
-    container.Position = UDim2.new(0, 10, 0, 60)
-    container.BackgroundTransparency = 1
-    container.BorderSizePixel = 0
-    container.ScrollBarThickness = 6
-    container.CanvasSize = UDim2.new(0, 0, 0, 600)
-    container.Parent = mainFrame
+    -- Tab Bar
+    local tabBar = Instance.new("Frame")
+    tabBar.Size = UDim2.new(1, -20, 0, 45)
+    tabBar.Position = UDim2.new(0, 10, 0, 60)
+    tabBar.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    tabBar.BorderSizePixel = 0
+    tabBar.Parent = mainFrame
     
-    local function createButton(name, position, callback)
+    local tabBarCorner = Instance.new("UICorner")
+    tabBarCorner.CornerRadius = UDim.new(0, 8)
+    tabBarCorner.Parent = tabBar
+    
+    -- Content Container
+    local contentContainer = Instance.new("Frame")
+    contentContainer.Size = UDim2.new(1, -20, 1, -125)
+    contentContainer.Position = UDim2.new(0, 10, 0, 115)
+    contentContainer.BackgroundTransparency = 1
+    contentContainer.BorderSizePixel = 0
+    contentContainer.Parent = mainFrame
+    
+    -- Tab Content Frames
+    local tabContents = {}
+    
+    for _, tabName in ipairs({"AutoRob", "Move", "Teleport", "Misc"}) do
+        local content = Instance.new("ScrollingFrame")
+        content.Name = tabName
+        content.Size = UDim2.new(1, 0, 1, 0)
+        content.BackgroundTransparency = 1
+        content.BorderSizePixel = 0
+        content.ScrollBarThickness = 6
+        content.CanvasSize = UDim2.new(0, 0, 0, 400)
+        content.Visible = false
+        content.Parent = contentContainer
+        tabContents[tabName] = content
+    end
+    
+    -- Show first tab by default
+    tabContents["AutoRob"].Visible = true
+    
+    -- Create Tab Buttons
+    local tabButtons = {}
+    local tabNames = {"AutoRob", "Move", "Teleport", "Misc"}
+    local tabIcons = {"💰", "🏃", "🗺️", "⚙️"}
+    
+    local function switchTab(tabName)
+        for name, content in pairs(tabContents) do
+            content.Visible = (name == tabName)
+        end
+        
+        for name, btn in pairs(tabButtons) do
+            if name == tabName then
+                btn.BackgroundColor3 = Color3.fromRGB(255, 85, 0)
+                btn.TextColor3 = Color3.white()
+            else
+                btn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+                btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+            end
+        end
+    end
+    
+    for i, tabName in ipairs(tabNames) do
+        local tabBtn = Instance.new("TextButton")
+        tabBtn.Size = UDim2.new(0.25, -5, 1, -10)
+        tabBtn.Position = UDim2.new((i-1) * 0.25, 2.5, 0, 5)
+        tabBtn.BackgroundColor3 = (i == 1) and Color3.fromRGB(255, 85, 0) or Color3.fromRGB(60, 60, 70)
+        tabBtn.Text = tabIcons[i] .. " " .. tabName
+        tabBtn.TextColor3 = (i == 1) and Color3.white() or Color3.fromRGB(200, 200, 200)
+        tabBtn.TextSize = 14
+        tabBtn.Font = Enum.Font.GothamBold
+        tabBtn.Parent = tabBar
+        
+        local tabBtnCorner = Instance.new("UICorner")
+        tabBtnCorner.CornerRadius = UDim.new(0, 6)
+        tabBtnCorner.Parent = tabBtn
+        
+        tabButtons[tabName] = tabBtn
+        
+        tabBtn.MouseButton1Click:Connect(function()
+            switchTab(tabName)
+        end)
+    end
+    
+    -- Helper function to create buttons
+    local function createButton(parent, name, position, callback)
         local btn = Instance.new("TextButton")
         btn.Size = UDim2.new(1, -10, 0, 45)
         btn.Position = UDim2.new(0, 5, 0, position)
@@ -259,7 +336,7 @@ function loadMainMenu()
         btn.TextColor3 = Color3.white()
         btn.TextSize = 15
         btn.Font = Enum.Font.Gotham
-        btn.Parent = container
+        btn.Parent = parent
         
         local btnCorner = Instance.new("UICorner")
         btnCorner.CornerRadius = UDim.new(0, 8)
@@ -296,13 +373,10 @@ function loadMainMenu()
                 
                 notify("Auto Rob", "Đang rob " .. storeData.name)
                 
-                -- TP vào store
                 teleportTo(storeData.entrance)
                 task.wait(2)
                 teleportTo(storeData.inside)
                 task.wait(5)
-                
-                -- TP ra ngoài
                 teleportTo(storeData.entrance)
                 task.wait(3)
             end
@@ -311,8 +385,8 @@ function loadMainMenu()
         end
     end
     
-    -- Buttons
-    createButton("💰 Auto Rob [ON/OFF]", 5, function()
+    -- TAB 1: Auto Rob
+    createButton(tabContents["AutoRob"], "💰 Auto Rob All [ON/OFF]", 5, function()
         autoRobbing = not autoRobbing
         if autoRobbing then
             spawn(startAutoRob)
@@ -321,7 +395,29 @@ function loadMainMenu()
         end
     end)
     
-    createButton("🏃 Speed Boost [ON/OFF]", 60, function()
+    createButton(tabContents["AutoRob"], "💎 Auto Rob Jewelry", 60, function()
+        notify("Auto Rob", "Đang rob Jewelry...")
+        teleportTo(stores["Jewelry"].entrance)
+        task.wait(2)
+        teleportTo(stores["Jewelry"].inside)
+    end)
+    
+    createButton(tabContents["AutoRob"], "🏦 Auto Rob Bank", 115, function()
+        notify("Auto Rob", "Đang rob Bank...")
+        teleportTo(stores["Bank"].entrance)
+        task.wait(2)
+        teleportTo(stores["Bank"].inside)
+    end)
+    
+    createButton(tabContents["AutoRob"], "🏛️ Auto Rob Museum", 170, function()
+        notify("Auto Rob", "Đang rob Museum...")
+        teleportTo(stores["Museum"].entrance)
+        task.wait(2)
+        teleportTo(stores["Museum"].inside)
+    end)
+    
+    -- TAB 2: Move
+    createButton(tabContents["Move"], "🏃 Speed Boost [ON/OFF]", 5, function()
         speedEnabled = not speedEnabled
         if speedEnabled then
             humanoid.WalkSpeed = 100
@@ -332,7 +428,7 @@ function loadMainMenu()
         end
     end)
     
-    createButton("🦘 Jump Power [ON/OFF]", 115, function()
+    createButton(tabContents["Move"], "🦘 Jump Power [ON/OFF]", 60, function()
         jumpEnabled = not jumpEnabled
         if jumpEnabled then
             humanoid.JumpPower = 150
@@ -343,39 +439,65 @@ function loadMainMenu()
         end
     end)
     
-    createButton("🏪 TP Jewelry Store", 170, function()
+    createButton(tabContents["Move"], "🔄 Reset Speed & Jump", 115, function()
+        humanoid.WalkSpeed = 16
+        humanoid.JumpPower = 50
+        speedEnabled = false
+        jumpEnabled = false
+        notify("Reset", "Đã reset về mặc định!")
+    end)
+    
+    -- TAB 3: Teleport
+    createButton(tabContents["Teleport"], "🏪 TP Jewelry Store", 5, function()
         teleportTo(stores["Jewelry"].entrance)
         notify("Teleport", "Đã TP đến Jewelry!")
     end)
     
-    createButton("🏦 TP Bank", 225, function()
+    createButton(tabContents["Teleport"], "🏦 TP Bank", 60, function()
         teleportTo(stores["Bank"].entrance)
         notify("Teleport", "Đã TP đến Bank!")
     end)
     
-    createButton("🏛️ TP Museum", 280, function()
+    createButton(tabContents["Teleport"], "🏛️ TP Museum", 115, function()
         teleportTo(stores["Museum"].entrance)
         notify("Teleport", "Đã TP đến Museum!")
     end)
     
-    createButton("🚗 TP Prison", 335, function()
+    createButton(tabContents["Teleport"], "🚗 TP Prison", 170, function()
         teleportTo(CFrame.new(-943, 18, -1500))
         notify("Teleport", "Đã TP đến Prison!")
     end)
     
-    createButton("🏠 TP Police Station", 390, function()
+    createButton(tabContents["Teleport"], "🏠 TP Police Station", 225, function()
         teleportTo(CFrame.new(-267, 18, 1574))
         notify("Teleport", "Đã TP đến Police Station!")
     end)
     
-    createButton("🔄 Reset Character", 445, function()
+    -- TAB 4: Misc
+    createButton(tabContents["Misc"], "🔄 Reset Character", 5, function()
         character:BreakJoints()
-        notify("Reset", "Đã reset!")
+        notify("Reset", "Đã reset character!")
     end)
     
-    createButton("ℹ️ Info", 500, function()
-        notify("Zimn Hub", "Version 1.0 - Key: ZimnHub12")
+    createButton(tabContents["Misc"], "ℹ️ Script Info", 60, function()
+        notify("Zimn Hub", "Version 1.0 | By ZimnLas")
     end)
+    
+    createButton(tabContents["Misc"], "📋 Copy Discord", 115, function()
+        setclipboard("discord.gg/zimnhub")
+        notify("Discord", "Đã copy link Discord!")
+    end)
+    
+    -- Footer
+    local footer = Instance.new("TextLabel")
+    footer.Size = UDim2.new(1, 0, 0, 20)
+    footer.Position = UDim2.new(0, 0, 1, -20)
+    footer.BackgroundTransparency = 1
+    footer.Text = "Created by ZimnLas | v1.0"
+    footer.TextColor3 = Color3.fromRGB(150, 150, 150)
+    footer.TextSize = 12
+    footer.Font = Enum.Font.Gotham
+    footer.Parent = mainFrame
     
     closeBtn.MouseButton1Click:Connect(function()
         screenGui:Destroy()
@@ -387,7 +509,7 @@ function loadMainMenu()
         end
     end)
     
-    notify("Zimn Hub", "Loaded! Nhấn Z để toggle")
+    notify("Zimn Hub", "Loaded! Press Z to toggle | By ZimnLas")
 end
 
 -- Start
