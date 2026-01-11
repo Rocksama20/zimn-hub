@@ -1,13 +1,15 @@
 -- Zimn Hub for Jailbreak v1.0
 -- Created by ZimnLas
 -- Key: ZimnHub12
+-- Compatible with Xeno and other executors
 
 local keyCorrect = "ZimnHub12"
 
--- Kiểm tra game
+-- Wait for game to load
 repeat task.wait() until game:IsLoaded()
-task.wait(2)
+task.wait(1)
 
+-- Check if Jailbreak
 if game.PlaceId ~= 606849621 then
     game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "⚠️ Zimn Hub";
@@ -19,22 +21,35 @@ end
 
 -- Services
 local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
 
 local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
-local rootPart = character:WaitForChild("HumanoidRootPart")
 
 -- Variables
 local autoRobbing = false
 local speedEnabled = false
 local jumpEnabled = false
-local currentTab = "AutoRob"
+local infiniteJumpEnabled = false
+local noclipEnabled = false
 
--- Stores/Locations
+-- Get character safely
+local function getCharacter()
+    return player.Character or player.CharacterAdded:Wait()
+end
+
+local function getHumanoid()
+    local char = getCharacter()
+    return char and char:FindFirstChildOfClass("Humanoid")
+end
+
+local function getRootPart()
+    local char = getCharacter()
+    return char and (char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso"))
+end
+
+-- Stores/Locations for Jailbreak
 local stores = {
     ["Jewelry"] = {
         entrance = CFrame.new(142, 18, 1365),
@@ -55,23 +70,72 @@ local stores = {
 
 -- Functions
 local function notify(title, text)
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = title;
-        Text = text;
-        Duration = 3;
-    })
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = title;
+            Text = text;
+            Duration = 3;
+        })
+    end)
 end
 
 local function teleportTo(cframe)
-    if character and character:FindFirstChild("HumanoidRootPart") then
-        character.HumanoidRootPart.CFrame = cframe
+    local rootPart = getRootPart()
+    if rootPart then
+        rootPart.CFrame = cframe
     end
+end
+
+-- Noclip function
+local noclipConnection
+local function toggleNoclip()
+    noclipEnabled = not noclipEnabled
+    
+    if noclipEnabled then
+        noclipConnection = RunService.Stepped:Connect(function()
+            local char = getCharacter()
+            if char then
+                for _, part in pairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end)
+        notify("Noclip", "Đã bật!")
+    else
+        if noclipConnection then
+            noclipConnection:Disconnect()
+        end
+        local char = getCharacter()
+        if char then
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
+            end
+        end
+        notify("Noclip", "Đã tắt!")
+    end
+end
+
+-- Infinite Jump
+local function setupInfiniteJump()
+    UIS.JumpRequest:Connect(function()
+        if infiniteJumpEnabled then
+            local humanoid = getHumanoid()
+            if humanoid then
+                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end
+    end)
 end
 
 -- Key System GUI
 local function createKeySystem()
     local playerGui = player:WaitForChild("PlayerGui")
     
+    -- Remove old GUI
     if playerGui:FindFirstChild("ZimnKeySystem") then
         playerGui.ZimnKeySystem:Destroy()
     end
@@ -81,6 +145,7 @@ local function createKeySystem()
     keyGui.Parent = playerGui
     keyGui.ResetOnSpawn = false
     keyGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    keyGui.IgnoreGuiInset = true
     
     local blur = Instance.new("Frame")
     blur.Size = UDim2.new(1, 0, 1, 0)
@@ -185,6 +250,7 @@ end
 function loadMainMenu()
     local playerGui = player:WaitForChild("PlayerGui")
     
+    -- Remove old menu
     if playerGui:FindFirstChild("ZimnMenu") then
         playerGui.ZimnMenu:Destroy()
     end
@@ -194,10 +260,11 @@ function loadMainMenu()
     screenGui.Parent = playerGui
     screenGui.ResetOnSpawn = false
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.IgnoreGuiInset = true
     
     local mainFrame = Instance.new("Frame")
-    mainFrame.Size = UDim2.new(0, 500, 0, 400)
-    mainFrame.Position = UDim2.new(0.5, -250, 0.5, -200)
+    mainFrame.Size = UDim2.new(0, 520, 0, 420)
+    mainFrame.Position = UDim2.new(0.5, -260, 0.5, -210)
     mainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
     mainFrame.BorderSizePixel = 0
     mainFrame.Active = true
@@ -223,9 +290,9 @@ function loadMainMenu()
     title.Size = UDim2.new(1, -100, 1, 0)
     title.Position = UDim2.new(0, 10, 0, 0)
     title.BackgroundTransparency = 1
-    title.Text = "🚔 ZIMN HUB"
+    title.Text = "🚔 ZIMN HUB - JAILBREAK"
     title.TextColor3 = Color3.white()
-    title.TextSize = 22
+    title.TextSize = 20
     title.Font = Enum.Font.GothamBold
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.Parent = header
@@ -258,7 +325,7 @@ function loadMainMenu()
     
     -- Content Container
     local contentContainer = Instance.new("Frame")
-    contentContainer.Size = UDim2.new(1, -20, 1, -125)
+    contentContainer.Size = UDim2.new(1, -20, 1, -145)
     contentContainer.Position = UDim2.new(0, 10, 0, 115)
     contentContainer.BackgroundTransparency = 1
     contentContainer.BorderSizePixel = 0
@@ -274,16 +341,16 @@ function loadMainMenu()
         content.BackgroundTransparency = 1
         content.BorderSizePixel = 0
         content.ScrollBarThickness = 6
-        content.CanvasSize = UDim2.new(0, 0, 0, 400)
+        content.ScrollBarImageColor3 = Color3.fromRGB(255, 85, 0)
+        content.CanvasSize = UDim2.new(0, 0, 0, 500)
         content.Visible = false
         content.Parent = contentContainer
         tabContents[tabName] = content
     end
     
-    -- Show first tab by default
     tabContents["AutoRob"].Visible = true
     
-    -- Create Tab Buttons
+    -- Tab Buttons
     local tabButtons = {}
     local tabNames = {"AutoRob", "Move", "Teleport", "Misc"}
     local tabIcons = {"💰", "🏃", "🗺️", "⚙️"}
@@ -311,7 +378,7 @@ function loadMainMenu()
         tabBtn.BackgroundColor3 = (i == 1) and Color3.fromRGB(255, 85, 0) or Color3.fromRGB(60, 60, 70)
         tabBtn.Text = tabIcons[i] .. " " .. tabName
         tabBtn.TextColor3 = (i == 1) and Color3.white() or Color3.fromRGB(200, 200, 200)
-        tabBtn.TextSize = 14
+        tabBtn.TextSize = 13
         tabBtn.Font = Enum.Font.GothamBold
         tabBtn.Parent = tabBar
         
@@ -326,7 +393,7 @@ function loadMainMenu()
         end)
     end
     
-    -- Helper function to create buttons
+    -- Create Button Function
     local function createButton(parent, name, position, callback)
         local btn = Instance.new("TextButton")
         btn.Size = UDim2.new(1, -10, 0, 45)
@@ -334,7 +401,7 @@ function loadMainMenu()
         btn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
         btn.Text = name
         btn.TextColor3 = Color3.white()
-        btn.TextSize = 15
+        btn.TextSize = 14
         btn.Font = Enum.Font.Gotham
         btn.Parent = parent
         
@@ -355,7 +422,10 @@ function loadMainMenu()
             task.wait(0.1)
             btn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
             if callback then
-                pcall(callback)
+                local success, err = pcall(callback)
+                if not success then
+                    notify("Error", "Lỗi: " .. tostring(err))
+                end
             end
         end)
         
@@ -367,29 +437,31 @@ function loadMainMenu()
         autoRobbing = true
         notify("Auto Rob", "Bắt đầu auto rob!")
         
-        while autoRobbing do
-            for storeName, storeData in pairs(stores) do
-                if not autoRobbing then break end
+        task.spawn(function()
+            while autoRobbing do
+                for storeName, storeData in pairs(stores) do
+                    if not autoRobbing then break end
+                    
+                    notify("Auto Rob", "Đang rob " .. storeData.name)
+                    
+                    teleportTo(storeData.entrance)
+                    task.wait(2)
+                    teleportTo(storeData.inside)
+                    task.wait(5)
+                    teleportTo(storeData.entrance)
+                    task.wait(3)
+                end
                 
-                notify("Auto Rob", "Đang rob " .. storeData.name)
-                
-                teleportTo(storeData.entrance)
-                task.wait(2)
-                teleportTo(storeData.inside)
-                task.wait(5)
-                teleportTo(storeData.entrance)
-                task.wait(3)
+                task.wait(10)
             end
-            
-            task.wait(10)
-        end
+        end)
     end
     
     -- TAB 1: Auto Rob
     createButton(tabContents["AutoRob"], "💰 Auto Rob All [ON/OFF]", 5, function()
         autoRobbing = not autoRobbing
         if autoRobbing then
-            spawn(startAutoRob)
+            startAutoRob()
         else
             notify("Auto Rob", "Đã tắt!")
         end
@@ -398,53 +470,79 @@ function loadMainMenu()
     createButton(tabContents["AutoRob"], "💎 Auto Rob Jewelry", 60, function()
         notify("Auto Rob", "Đang rob Jewelry...")
         teleportTo(stores["Jewelry"].entrance)
-        task.wait(2)
+        task.wait(1)
         teleportTo(stores["Jewelry"].inside)
     end)
     
     createButton(tabContents["AutoRob"], "🏦 Auto Rob Bank", 115, function()
         notify("Auto Rob", "Đang rob Bank...")
         teleportTo(stores["Bank"].entrance)
-        task.wait(2)
+        task.wait(1)
         teleportTo(stores["Bank"].inside)
     end)
     
     createButton(tabContents["AutoRob"], "🏛️ Auto Rob Museum", 170, function()
         notify("Auto Rob", "Đang rob Museum...")
         teleportTo(stores["Museum"].entrance)
-        task.wait(2)
+        task.wait(1)
         teleportTo(stores["Museum"].inside)
     end)
     
     -- TAB 2: Move
     createButton(tabContents["Move"], "🏃 Speed Boost [ON/OFF]", 5, function()
         speedEnabled = not speedEnabled
-        if speedEnabled then
-            humanoid.WalkSpeed = 100
-            notify("Speed", "Đã bật!")
-        else
-            humanoid.WalkSpeed = 16
-            notify("Speed", "Đã tắt!")
+        local humanoid = getHumanoid()
+        if humanoid then
+            if speedEnabled then
+                humanoid.WalkSpeed = 100
+                notify("Speed", "Đã bật (100)!")
+            else
+                humanoid.WalkSpeed = 16
+                notify("Speed", "Đã tắt!")
+            end
         end
     end)
     
     createButton(tabContents["Move"], "🦘 Jump Power [ON/OFF]", 60, function()
         jumpEnabled = not jumpEnabled
-        if jumpEnabled then
-            humanoid.JumpPower = 150
-            notify("Jump", "Đã bật!")
-        else
-            humanoid.JumpPower = 50
-            notify("Jump", "Đã tắt!")
+        local humanoid = getHumanoid()
+        if humanoid then
+            if jumpEnabled then
+                humanoid.JumpPower = 150
+                notify("Jump", "Đã bật (150)!")
+            else
+                humanoid.JumpPower = 50
+                notify("Jump", "Đã tắt!")
+            end
         end
     end)
     
-    createButton(tabContents["Move"], "🔄 Reset Speed & Jump", 115, function()
-        humanoid.WalkSpeed = 16
-        humanoid.JumpPower = 50
+    createButton(tabContents["Move"], "♾️ Infinite Jump [ON/OFF]", 115, function()
+        infiniteJumpEnabled = not infiniteJumpEnabled
+        if infiniteJumpEnabled then
+            notify("Inf Jump", "Đã bật!")
+        else
+            notify("Inf Jump", "Đã tắt!")
+        end
+    end)
+    
+    createButton(tabContents["Move"], "👻 Noclip [ON/OFF]", 170, function()
+        toggleNoclip()
+    end)
+    
+    createButton(tabContents["Move"], "🔄 Reset All Movement", 225, function()
+        local humanoid = getHumanoid()
+        if humanoid then
+            humanoid.WalkSpeed = 16
+            humanoid.JumpPower = 50
+        end
         speedEnabled = false
         jumpEnabled = false
-        notify("Reset", "Đã reset về mặc định!")
+        infiniteJumpEnabled = false
+        if noclipEnabled then
+            toggleNoclip()
+        end
+        notify("Reset", "Đã reset tất cả!")
     end)
     
     -- TAB 3: Teleport
@@ -470,32 +568,52 @@ function loadMainMenu()
     
     createButton(tabContents["Teleport"], "🏠 TP Police Station", 225, function()
         teleportTo(CFrame.new(-267, 18, 1574))
-        notify("Teleport", "Đã TP đến Police Station!")
+        notify("Teleport", "Đã TP đến Police!")
+    end)
+    
+    createButton(tabContents["Teleport"], "🏙️ TP City", 280, function()
+        teleportTo(CFrame.new(-300, 18, 1500))
+        notify("Teleport", "Đã TP đến City!")
     end)
     
     -- TAB 4: Misc
     createButton(tabContents["Misc"], "🔄 Reset Character", 5, function()
-        character:BreakJoints()
-        notify("Reset", "Đã reset character!")
+        local char = getCharacter()
+        if char then
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid.Health = 0
+            end
+        end
+        notify("Reset", "Đã reset!")
     end)
     
-    createButton(tabContents["Misc"], "ℹ️ Script Info", 60, function()
-        notify("Zimn Hub", "Version 1.0 | By ZimnLas")
+    createButton(tabContents["Misc"], "🔁 Respawn", 60, function()
+        player:LoadCharacter()
+        notify("Respawn", "Đang respawn...")
     end)
     
-    createButton(tabContents["Misc"], "📋 Copy Discord", 115, function()
-        setclipboard("discord.gg/zimnhub")
-        notify("Discord", "Đã copy link Discord!")
+    createButton(tabContents["Misc"], "ℹ️ Script Info", 115, function()
+        notify("Zimn Hub", "v1.0 | By ZimnLas | Xeno Compatible")
+    end)
+    
+    createButton(tabContents["Misc"], "📋 Copy Discord", 170, function()
+        if setclipboard then
+            setclipboard("discord.gg/zimnhub")
+            notify("Discord", "Đã copy!")
+        else
+            notify("Error", "Executor không hỗ trợ clipboard!")
+        end
     end)
     
     -- Footer
     local footer = Instance.new("TextLabel")
     footer.Size = UDim2.new(1, 0, 0, 20)
-    footer.Position = UDim2.new(0, 0, 1, -20)
+    footer.Position = UDim2.new(0, 0, 1, -22)
     footer.BackgroundTransparency = 1
-    footer.Text = "Created by ZimnLas | v1.0"
+    footer.Text = "Created by ZimnLas | v1.0 | Xeno Compatible"
     footer.TextColor3 = Color3.fromRGB(150, 150, 150)
-    footer.TextSize = 12
+    footer.TextSize = 11
     footer.Font = Enum.Font.Gotham
     footer.Parent = mainFrame
     
@@ -509,7 +627,23 @@ function loadMainMenu()
         end
     end)
     
-    notify("Zimn Hub", "Loaded! Press Z to toggle | By ZimnLas")
+    -- Setup infinite jump
+    setupInfiniteJump()
+    
+    -- Character respawn handling
+    player.CharacterAdded:Connect(function(char)
+        task.wait(1)
+        if speedEnabled then
+            local hum = char:WaitForChild("Humanoid", 5)
+            if hum then hum.WalkSpeed = 100 end
+        end
+        if jumpEnabled then
+            local hum = char:WaitForChild("Humanoid", 5)
+            if hum then hum.JumpPower = 150 end
+        end
+    end)
+    
+    notify("Zimn Hub", "Loaded! Press Z | By ZimnLas")
 end
 
 -- Start
